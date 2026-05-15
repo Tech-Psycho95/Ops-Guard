@@ -120,9 +120,9 @@ const AdminTransactionsPage = () => {
                 <Badge
                   variant={
                     transaction.status === "Completed"
-                      ? "default"
+                      ? "success"
                       : transaction.status === "Pending"
-                      ? "secondary"
+                      ? "default"
                       : "destructive"
                   }
                 >

@@ -1,37 +1,111 @@
-import React from 'react';
+import React, { createContext, useContext, useState } from 'react';
 
-const Select = ({ children, ...props }: React.SelectHTMLAttributes<HTMLSelectElement>) => (
-  <div className="relative">
-    <select
-      className="h-10 w-full appearance-none rounded-md border border-gray-300 bg-transparent pl-3 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+interface SelectContextType {
+  open: boolean;
+  setOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  value: string;
+  setValue: React.Dispatch<React.SetStateAction<string>>;
+  onValueChange?: (value: string) => void;
+}
+
+const SelectContext = createContext<SelectContextType | undefined>(undefined);
+
+const useSelect = () => {
+  const context = useContext(SelectContext);
+  if (!context) {
+    throw new Error('useSelect must be used within a SelectProvider');
+  }
+  return context;
+};
+
+const Select = ({
+  children,
+  value: controlledValue,
+  onValueChange,
+}: {
+  children: React.ReactNode;
+  value?: string;
+  onValueChange?: (value: string) => void;
+}) => {
+  const [open, setOpen] = useState(false);
+  const [uncontrolledValue, setUncontrolledValue] = useState('');
+
+  const value = controlledValue ?? uncontrolledValue;
+  const setValue = onValueChange ?? setUncontrolledValue;
+
+  return (
+    <SelectContext.Provider value={{ open, setOpen, value, setValue: setValue as React.Dispatch<React.SetStateAction<string>>, onValueChange }}>
+      <div className="relative">{children}</div>
+    </SelectContext.Provider>
+  );
+};
+
+const SelectTrigger = ({
+  children,
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLButtonElement>) => {
+  const { setOpen } = useSelect();
+  return (
+    <button
+      onClick={() => setOpen((prev) => !prev)}
+      className={`flex h-10 w-full items-center justify-between rounded-md border border-gray-300 bg-transparent px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 ${className}`}
       {...props}
     >
       {children}
-    </select>
-    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-      <svg className="h-4 w-4 fill-current" viewBox="0 0 20 20">
-        <path d="M5.516 7.548c.436-.446 1.144-.446 1.58 0L10 10.434l2.904-2.886c.436-.446 1.144-.446 1.58 0 .436.446.436 1.167 0 1.613l-3.7 3.762c-.436.446-1.144.446-1.58 0l-3.7-3.762c-.436-.446-.436-1.167 0-1.613z" />
-      </svg>
+    </button>
+  );
+};
+
+const SelectValue = ({ placeholder }: { placeholder?: string }) => {
+  const { value } = useSelect();
+  return <span>{value || placeholder}</span>;
+};
+
+const SelectContent = ({
+  children,
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement>) => {
+  const { open } = useSelect();
+  if (!open) return null;
+  return (
+    <div
+      className={`absolute z-10 mt-1 w-full rounded-md border border-gray-300 bg-white shadow-lg ${className}`}
+      {...props}
+    >
+      {children}
     </div>
-  </div>
-);
+  );
+};
 
-const SelectTrigger = ({ children, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
-  <div {...props}>{children}</div>
-);
-
-const SelectValue = ({ children, ...props }: React.HTMLAttributes<HTMLSpanElement>) => (
-  <span {...props}>{children}</span>
-);
-
-const SelectContent = ({ children, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
-  <div className="absolute z-10 mt-1 w-full rounded-md border border-gray-300 bg-white shadow-lg" {...props}>
-    {children}
-  </div>
-);
-
-const SelectItem = ({ children, ...props }: React.OptionHTMLAttributes<HTMLOptionElement>) => (
-  <option {...props}>{children}</option>
-);
+const SelectItem = ({
+  value,
+  children,
+  className,
+  ...props
+}: {
+  value: string;
+  children: React.ReactNode;
+  className?: string;
+}) => {
+  const { setValue, setOpen, onValueChange } = useSelect();
+  const handleClick = () => {
+    setValue(value);
+    if (onValueChange) {
+      onValueChange(value);
+    }
+    setOpen(false);
+  };
+  return (
+    <div
+      onClick={handleClick}
+      className={`cursor-pointer px-3 py-2 text-sm hover:bg-gray-100 ${className}`}
+      {...props}
+    >
+      {children}
+    </div>
+  );
+};
 
 export { Select, SelectTrigger, SelectValue, SelectContent, SelectItem };
