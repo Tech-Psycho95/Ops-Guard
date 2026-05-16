@@ -6,8 +6,7 @@ for the openMF PH-EE Operations Web project.
 
 ## Demo
 
-Live: [your-vercel-link]  
-GitHub: https://github.com/YOUR_USERNAME/ops-guard
+[vercel](ops-guard-eyhv.vercel.app/)
 
 ## Test Credentials
 
